@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Ghhnu Game is a 2D adventure inspired by Rucoy. Offline, forever. Download the Android APK.">
+<meta name="theme-color" content="#12151c">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<title>Ghhnu Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-blur: 8px;             /* borrosidad del fondo: súbelo o bájalo a tu gusto */
+    --fx-blur: 16px;            /* intensidad del difuminado al cambiar de idioma */
+    --fx-time: 0.45s;           /* duración del difuminado (entrada y salida) */
+    --ink: #12151c;
+    --panel: rgba(18, 21, 28, 0.78);
+    --line: rgba(255, 255, 255, 0.12);
+    --text: #eef0f4;
+    --muted: #aab1be;
+    --gold: #f0bf4c;
+    --gold-hover: #f7cf6d;
+    --gold-ink: #1d1605;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
+
+  body {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: var(--text);
+    background: var(--ink);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* Fondo borroso */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -30px;
+    background: var(--ink) url("background.png") center / cover no-repeat;
+    filter: blur(var(--bg-blur));
+    z-index: -2;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(12,14,20,0.72) 0%, rgba(12,14,20,0.5) 45%, rgba(12,14,20,0.85) 100%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  main {
+    width: min(100%, 1040px);
+    margin: 0 auto;
+    padding: clamp(4.5rem, 10vw, 5.5rem) clamp(1.1rem, 4vw, 2rem) 2.5rem;
+    transition: filter var(--fx-time) ease, opacity var(--fx-time) ease, transform var(--fx-time) ease;
+  }
+
+  /* Cambio de idioma: el contenido se difumina y se desvanece, y vuelve a aparecer nítido */
+  html.fx-out main {
+    filter: blur(var(--fx-blur));
+    opacity: 0;
+    transform: scale(0.985);
+  }
+
+  /* Hero */
+  .hero { text-align: center; padding-bottom: clamp(2.5rem, 7vw, 4.5rem); }
+  h1 {
+    font-family: "Press Start 2P", monospace;
+    font-weight: 400;
+    font-size: clamp(1.6rem, 6.5vw, 3.2rem);
+    line-height: 1.3;
+    color: var(--gold);
+    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45);
+  }
+  .tagline {
+    margin: 1.4rem auto 0;
+    max-width: 30ch;
+    font-size: clamp(1.1rem, 3.2vw, 1.35rem);
+    color: var(--text);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2.2rem;
+    min-height: 56px;
+    padding: 0 2.4rem;
+    font: inherit;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--gold-ink);
+    background: var(--gold);
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    transition: background 0.15s, transform 0.15s;
+  }
+  .btn:hover { background: var(--gold-hover); }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+  .btn[disabled] { background: #7c8190; cursor: default; box-shadow: none; }
+  .file-info { margin-top: 1rem; color: var(--muted); font-size: 0.95rem; }
+
+  /* Paneles */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  h2 { font-size: 1.2rem; font-weight: 600; line-height: 1.3; margin-bottom: 0.7rem; }
+
+  .about { padding: clamp(1.4rem, 4vw, 2.2rem); }
+  .about p { max-width: 66ch; color: var(--text); }
+  .about p + p { margin-top: 1rem; }
+  .about b { color: var(--gold); font-weight: 600; }
+
+  .notes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-top: 1.25rem;
+  }
+  .note { padding: clamp(1.3rem, 3.5vw, 1.8rem); }
+  .note p { color: var(--muted); }
+  .note b { color: var(--text); font-weight: 600; }
+  .note.offline { border-top: 3px solid #e0645a; }
+  .note.save { border-top: 3px solid #5a8fe0; }
+
+  footer {
+    text-align: center;
+    margin-top: 2.5rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  /* ---------- Selector de idioma ---------- */
+  .lang {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    right: calc(env(safe-area-inset-right, 0px) + 14px);
+    z-index: 5;
+  }
+  .lang-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1rem;
+    font: inherit;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: background 0.15s;
+  }
+  .lang-btn:hover { background: rgba(40, 45, 58, 0.9); }
+  .lang-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .lang-btn svg { width: 18px; height: 18px; flex: none; }
+  .lang-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 170px;
+    padding: 6px;
+    background: #1a1e28;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  }
+  .lang-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.65rem 0.9rem;
+    font: inherit;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .lang-menu button:hover { background: rgba(255, 255, 255, 0.08); }
+  .lang-menu button:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+  .lang-menu button[aria-checked="true"] { color: var(--gold); font-weight: 600; }
+
+  /* ---------- Pantalla de descarga ---------- */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 10, 15, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    z-index: 10;
+  }
+  .overlay.open { display: flex; }
+  .dl {
+    width: min(460px, 100%);
+    padding: 1.8rem clamp(1.2rem, 5vw, 2rem);
+    text-align: center;
+    background: #1a1e28;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  }
+  .dl h3 { font-size: 1.2rem; font-weight: 600; }
+  .dl-file { color: var(--muted); margin: 0.2rem 0 1.4rem; font-size: 0.95rem; }
+
+  .bar {
+    height: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--gold);
+    border-radius: 999px;
+    transition: width 0.15s linear;
+  }
+  .bar.indeterminate .bar-fill { width: 30%; animation: slide 1s ease-in-out infinite alternate; }
+  @keyframes slide { from { margin-left: 0; } to { margin-left: 70%; } }
+
+  .bar-pct { margin-top: 0.8rem; font-size: 1.6rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .dl-stats { margin-top: 0.2rem; color: var(--muted); font-size: 0.95rem; min-height: 1.6em; }
+  .dl-actions { display: none; margin-top: 1.4rem; }
+  .dl-actions.show { display: block; }
+  .btn-small {
+    font: inherit;
+    font-weight: 500;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.7rem 1.8rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-small:hover { background: rgba(255, 255, 255, 0.08); }
+  .btn-small:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+  /* Móvil */
+  @media (max-width: 700px) {
+    body { font-size: 1.02rem; }
+    .notes { grid-template-columns: 1fr; }
+    .btn { width: 100%; max-width: 340px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn, .bar-fill, .btn-small, .lang-btn, main { transition: none; }
+    .bar.indeterminate .bar-fill { animation: none; margin-left: 35%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Selector de idioma -->
+<div class="lang" id="lang">
+  <button class="lang-btn" id="langBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="langMenu" data-i18n-aria="langLabel" aria-label="Change language">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"></circle>
+      <path d="M3 12h18"></path>
+      <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"></path>
+    </svg>
+    <span id="langCode">EN</span>
+  </button>
+  <div class="lang-menu" id="langMenu" role="menu" hidden>
+    <button type="button" role="menuitemradio" aria-checked="true" data-lang="en">English</button>
+    <button type="button" role="menuitemradio" aria-checked="false" data-lang="es">Español</button>
+    <button type="button" role="menuitemradio" aria-checked="false" data-lang="pt">Português</button>
+    <button type="button" role="menuitemradio" aria-checked="false" data-lang="ru">Русский</button>
+    <button type="button" role="menuitemradio" aria-checked="false" data-lang="fr">Français</button>
+  </div>
+</div>
+
+<main id="page">
+  <header class="hero">
+    <h1>Ghhnu<br>Game</h1>
+    <p class="tagline" data-i18n="tagline">A 2D adventure inspired by Rucoy. Offline, forever.</p>
+    <button class="btn" id="downloadBtn" type="button" data-i18n="dlBtn">Download APK</button>
+    <p class="file-info" data-i18n="fileInfo">For Android · Ghhnu Game.apk</p>
+  </header>
+
+  <section class="panel about" aria-labelledby="about-title">
+    <h2 id="about-title" data-i18n="aboutTitle">About the game</h2>
+    <p data-i18n-html="about1">First off, let me introduce myself. I’m <b>Ghhnu</b>, and I started playing Rucoy about 9 years ago. Ever since I began creating content on YouTube, I always wanted to make a game similar to Rucoy, or be part of Rucoy itself. Unfortunately, the second one didn’t work out, but I made the first one a reality.</p>
+    <p data-i18n="about2">The gameplay is like Rucoy. There’s not much to explain, better that you discover it for yourselves.</p>
+  </section>
+
+  <div class="notes">
+    <section class="panel note offline" aria-labelledby="offline-title">
+      <h2 id="offline-title" data-i18n="offlineTitle">Always offline</h2>
+      <p data-i18n-html="offlineText">I want to make one thing clear: this game will <b>never</b> be online. If you want to play something online, go play Rucoy. This will always be offline.</p>
+    </section>
+
+    <section class="panel note save" aria-labelledby="save-title">
+      <h2 id="save-title" data-i18n="saveTitle">Your progress</h2>
+      <p data-i18n="saveText">Your progress is saved on your device. When I announce an update, don’t uninstall the game. Just download the new APK and an “Update” button will appear. The moment you uninstall the game from your phone, your progress ceases to exist.</p>
+    </section>
+  </div>
+
+  <footer data-i18n="footer">Made by Ghhnu</footer>
+</main>
+
+<!-- Pantalla de descarga -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="dl-title">
+  <div class="dl">
+    <h3 id="dl-title" data-i18n="dlTitle">Downloading</h3>
+    <p class="dl-file">Ghhnu Game.apk</p>
+    <div class="bar" id="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="bar-fill" id="barFill"></div>
+    </div>
+    <p class="bar-pct" id="barPct">0%</p>
+    <p class="dl-stats" id="dlStats" aria-live="polite" data-i18n="dlStarting">Starting…</p>
+    <div class="dl-actions" id="dlActions">
+      <button class="btn-small" id="closeBtn" type="button" data-i18n="close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Nombre EXACTO del APK (mayúsculas y espacios incluidos) y debe estar en la misma carpeta que este index.html
+  var FILE = "Ghhnu Game.apk";
+
+  /* ---------- Traducciones ---------- */
+  var I18N = {
+    en: {
+      metaDesc: "Ghhnu Game is a 2D adventure inspired by Rucoy. Offline, forever. Download the Android APK.",
+      langLabel: "Change language",
+      tagline: "A 2D adventure inspired by Rucoy. Offline, forever.",
+      dlBtn: "Download APK",
+      fileInfo: "For Android · Ghhnu Game.apk",
+      aboutTitle: "About the game",
+      about1: "First off, let me introduce myself. I’m <b>Ghhnu</b>, and I started playing Rucoy about 9 years ago. Ever since I began creating content on YouTube, I always wanted to make a game similar to Rucoy, or be part of Rucoy itself. Unfortunately, the second one didn’t work out, but I made the first one a reality.",
+      about2: "The gameplay is like Rucoy. There’s not much to explain, better that you discover it for yourselves.",
+      offlineTitle: "Always offline",
+      offlineText: "I want to make one thing clear: this game will <b>never</b> be online. If you want to play something online, go play Rucoy. This will always be offline.",
+      saveTitle: "Your progress",
+      saveText: "Your progress is saved on your device. When I announce an update, don’t uninstall the game. Just download the new APK and an “Update” button will appear. The moment you uninstall the game from your phone, your progress ceases to exist.",
+      footer: "Made by Ghhnu",
+      dlTitle: "Downloading",
+      dlStarting: "Starting…",
+      dlComplete: "Download complete",
+      dlStarted: "Download started",
+      dlOpenApk: "Open the APK on your phone to install the game.",
+      dlBrowser: "Your browser is handling the download. Check your downloads folder.",
+      dlFailTitle: "Download failed",
+      dlError: "The file could not be found. Please try again later.",
+      close: "Close",
+      of: "of",
+      downloaded: "downloaded"
+    },
+    es: {
+      metaDesc: "Ghhnu Game es una aventura 2D inspirada en Rucoy. Sin conexión, para siempre. Descarga el APK para Android.",
+      langLabel: "Cambiar idioma",
+      tagline: "Una aventura 2D inspirada en Rucoy. Sin conexión, para siempre.",
+      dlBtn: "Descargar APK",
+      fileInfo: "Para Android · Ghhnu Game.apk",
+      aboutTitle: "Sobre el juego",
+      about1: "Antes de nada, déjame presentarme. Soy <b>Ghhnu</b> y empecé a jugar a Rucoy hace unos 9 años. Desde que empecé a crear contenido en YouTube, siempre quise hacer un juego parecido a Rucoy, o formar parte del propio Rucoy. Por desgracia, lo segundo no salió, pero lo primero lo hice realidad.",
+      about2: "La jugabilidad es como la de Rucoy. No hay mucho que explicar, es mejor que lo descubráis vosotros mismos.",
+      offlineTitle: "Siempre sin conexión",
+      offlineText: "Quiero dejar una cosa clara: este juego <b>nunca</b> será online. Si quieres jugar a algo online, juega a Rucoy. Este siempre será offline.",
+      saveTitle: "Tu progreso",
+      saveText: "Tu progreso se guarda en tu dispositivo. Cuando anuncie una actualización, no desinstales el juego. Solo descarga el nuevo APK y aparecerá un botón de «Actualizar». En el momento en que desinstales el juego de tu teléfono, tu progreso deja de existir.",
+      footer: "Hecho por Ghhnu",
+      dlTitle: "Descargando",
+      dlStarting: "Iniciando…",
+      dlComplete: "Descarga completada",
+      dlStarted: "Descarga iniciada",
+      dlOpenApk: "Abre el APK en tu teléfono para instalar el juego.",
+      dlBrowser: "Tu navegador está gestionando la descarga. Revisa tu carpeta de descargas.",
+      dlFailTitle: "Error en la descarga",
+      dlError: "No se pudo encontrar el archivo. Inténtalo de nuevo más tarde.",
+      close: "Cerrar",
+      of: "de",
+      downloaded: "descargados"
+    },
+    pt: {
+      metaDesc: "Ghhnu Game é uma aventura 2D inspirada em Rucoy. Offline, para sempre. Baixe o APK para Android.",
+      langLabel: "Mudar idioma",
+      tagline: "Uma aventura 2D inspirada em Rucoy. Offline, para sempre.",
+      dlBtn: "Baixar APK",
+      fileInfo: "Para Android · Ghhnu Game.apk",
+      aboutTitle: "Sobre o jogo",
+      about1: "Primeiro, deixe-me me apresentar. Eu sou o <b>Ghhnu</b> e comecei a jogar Rucoy há cerca de 9 anos. Desde que comecei a criar conteúdo no YouTube, sempre quis fazer um jogo parecido com Rucoy, ou fazer parte do próprio Rucoy. Infelizmente, a segunda opção não deu certo, mas a primeira eu tornei realidade.",
+      about2: "A jogabilidade é como a de Rucoy. Não há muito o que explicar, é melhor que vocês descubram por conta própria.",
+      offlineTitle: "Sempre offline",
+      offlineText: "Quero deixar uma coisa clara: este jogo <b>nunca</b> será online. Se você quer jogar algo online, vá jogar Rucoy. Este será sempre offline.",
+      saveTitle: "Seu progresso",
+      saveText: "Seu progresso é salvo no seu dispositivo. Quando eu anunciar uma atualização, não desinstale o jogo. Basta baixar o novo APK e um botão “Atualizar” vai aparecer. No momento em que você desinstalar o jogo do seu celular, seu progresso deixa de existir.",
+      footer: "Feito por Ghhnu",
+      dlTitle: "Baixando",
+      dlStarting: "Iniciando…",
+      dlComplete: "Download concluído",
+      dlStarted: "Download iniciado",
+      dlOpenApk: "Abra o APK no seu celular para instalar o jogo.",
+      dlBrowser: "O seu navegador está cuidando do download. Verifique sua pasta de downloads.",
+      dlFailTitle: "Falha no download",
+      dlError: "Não foi possível encontrar o arquivo. Tente novamente mais tarde.",
+      close: "Fechar",
+      of: "de",
+      downloaded: "baixados"
+    },
+    ru: {
+      metaDesc: "Ghhnu Game — 2D-приключение по мотивам Rucoy. Офлайн навсегда. Скачайте APK для Android.",
+      langLabel: "Сменить язык",
+      tagline: "2D-приключение по мотивам Rucoy. Офлайн навсегда.",
+      dlBtn: "Скачать APK",
+      fileInfo: "Для Android · Ghhnu Game.apk",
+      aboutTitle: "Об игре",
+      about1: "Для начала позвольте представиться. Я <b>Ghhnu</b>, и я играю в Rucoy уже около 9 лет. С тех пор как я начал создавать контент на YouTube, я всегда хотел сделать игру, похожую на Rucoy, или стать частью самой Rucoy. К сожалению, второе не получилось, но первое я воплотил в жизнь.",
+      about2: "Геймплей такой же, как в Rucoy. Объяснять особо нечего — лучше откройте всё сами.",
+      offlineTitle: "Всегда офлайн",
+      offlineText: "Хочу сразу прояснить: эта игра <b>никогда</b> не будет онлайн. Если хотите играть онлайн — играйте в Rucoy. Эта игра всегда будет офлайн.",
+      saveTitle: "Ваш прогресс",
+      saveText: "Ваш прогресс сохраняется на вашем устройстве. Когда я объявлю об обновлении, не удаляйте игру. Просто скачайте новый APK, и появится кнопка «Обновить». Как только вы удалите игру с телефона, ваш прогресс исчезнет.",
+      footer: "Сделано Ghhnu",
+      dlTitle: "Загрузка",
+      dlStarting: "Запуск…",
+      dlComplete: "Загрузка завершена",
+      dlStarted: "Загрузка начата",
+      dlOpenApk: "Откройте APK на телефоне, чтобы установить игру.",
+      dlBrowser: "Браузер занимается загрузкой. Проверьте папку «Загрузки».",
+      dlFailTitle: "Ошибка загрузки",
+      dlError: "Файл не найден. Попробуйте позже.",
+      close: "Закрыть",
+      of: "из",
+      downloaded: "загружено"
+    },
+    fr: {
+      metaDesc: "Ghhnu Game est une aventure 2D inspirée de Rucoy. Hors ligne, pour toujours. Téléchargez l’APK pour Android.",
+      langLabel: "Changer de langue",
+      tagline: "Une aventure 2D inspirée de Rucoy. Hors ligne, pour toujours.",
+      dlBtn: "Télécharger l’APK",
+      fileInfo: "Pour Android · Ghhnu Game.apk",
+      aboutTitle: "À propos du jeu",
+      about1: "Pour commencer, laissez-moi me présenter. Je suis <b>Ghhnu</b>, et je joue à Rucoy depuis environ 9 ans. Depuis que j’ai commencé à créer du contenu sur YouTube, j’ai toujours voulu faire un jeu similaire à Rucoy, ou faire partie de Rucoy lui-même. Malheureusement, la seconde option n’a pas fonctionné, mais j’ai réalisé la première.",
+      about2: "Le gameplay est comme celui de Rucoy. Il n’y a pas grand-chose à expliquer, mieux vaut que vous le découvriez par vous-mêmes.",
+      offlineTitle: "Toujours hors ligne",
+      offlineText: "Je tiens à être clair : ce jeu ne sera <b>jamais</b> en ligne. Si vous voulez jouer à quelque chose en ligne, allez jouer à Rucoy. Celui-ci sera toujours hors ligne.",
+      saveTitle: "Votre progression",
+      saveText: "Votre progression est enregistrée sur votre appareil. Quand j’annoncerai une mise à jour, ne désinstallez pas le jeu. Téléchargez simplement le nouvel APK et un bouton « Mettre à jour » apparaîtra. Dès que vous désinstallez le jeu de votre téléphone, votre progression cesse d’exister.",
+      footer: "Créé par Ghhnu",
+      dlTitle: "Téléchargement",
+      dlStarting: "Démarrage…",
+      dlComplete: "Téléchargement terminé",
+      dlStarted: "Téléchargement lancé",
+      dlOpenApk: "Ouvrez l’APK sur votre téléphone pour installer le jeu.",
+      dlBrowser: "Votre navigateur gère le téléchargement. Consultez votre dossier de téléchargements.",
+      dlFailTitle: "Échec du téléchargement",
+      dlError: "Le fichier est introuvable. Réessayez plus tard.",
+      close: "Fermer",
+      of: "sur",
+      downloaded: "téléchargés"
+    }
+  };
+
+  var current = "en"; // idioma por defecto
+  var root = document.documentElement;
+  var metaDesc = document.querySelector('meta[name="description"]');
+  var langBtn = document.getElementById("langBtn");
+  var langMenu = document.getElementById("langMenu");
+  var langCode = document.getElementById("langCode");
+  var busy = false;
+
+  function t(key) { return I18N[current][key]; }
+
+  function applyLang(code) {
+    current = code;
+    var dict = I18N[code];
+    root.lang = code;
+    metaDesc.setAttribute("content", dict.metaDesc);
+    Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"), function (el) {
+      el.textContent = dict[el.getAttribute("data-i18n")];
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-i18n-html]"), function (el) {
+      el.innerHTML = dict[el.getAttribute("data-i18n-html")];
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-i18n-aria]"), function (el) {
+      el.setAttribute("aria-label", dict[el.getAttribute("data-i18n-aria")]);
+    });
+    langCode.textContent = code.toUpperCase();
+    Array.prototype.forEach.call(langMenu.querySelectorAll("button"), function (b) {
+      b.setAttribute("aria-checked", b.getAttribute("data-lang") === code ? "true" : "false");
+    });
+  }
+
+  /* ---------- Menú de idioma ---------- */
+  function openMenu() {
+    langMenu.hidden = false;
+    langBtn.setAttribute("aria-expanded", "true");
+  }
+  function closeMenu() {
+    langMenu.hidden = true;
+    langBtn.setAttribute("aria-expanded", "false");
+  }
+  langBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (langMenu.hidden) openMenu(); else closeMenu();
+  });
+  document.addEventListener("click", function (e) {
+    if (!langMenu.hidden && !langMenu.contains(e.target)) closeMenu();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !langMenu.hidden) { closeMenu(); langBtn.focus(); }
+  });
+
+  /* ---------- Cambio de idioma con difuminado ---------- */
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Duración del difuminado en milisegundos (debe coincidir con --fx-time del CSS)
+  var FX_MS = 450;
+
+  function switchLang(code) {
+    closeMenu();
+    if (busy || code === current) return;
+    if (reduceMotion) { applyLang(code); return; }
+
+    busy = true;
+
+    // 1) El contenido se difumina y se desvanece
+    root.classList.add("fx-out");
+
+    setTimeout(function () {
+      // 2) Con la página ya invisible, se cambia el idioma
+      window.scrollTo(0, 0);
+      applyLang(code);
+
+      // 3) El contenido vuelve a aparecer nítido
+      root.classList.remove("fx-out");
+
+      setTimeout(function () { busy = false; }, FX_MS);
+    }, FX_MS);
+  }
+
+  Array.prototype.forEach.call(langMenu.querySelectorAll("button"), function (b) {
+    b.addEventListener("click", function () { switchLang(b.getAttribute("data-lang")); });
+  });
+
+  /* ---------- Descarga ---------- */
+  var btn = document.getElementById("downloadBtn");
+  var overlay = document.getElementById("overlay");
+  var bar = document.getElementById("bar");
+  var fill = document.getElementById("barFill");
+  var pct = document.getElementById("barPct");
+  var stats = document.getElementById("dlStats");
+  var title = document.getElementById("dl-title");
+  var actions = document.getElementById("dlActions");
+  var closeBtn = document.getElementById("closeBtn");
+
+  function mb(bytes) { return (bytes / 1048576).toFixed(1) + " MB"; }
+
+  function setProgress(p) {
+    fill.style.width = p + "%";
+    pct.textContent = Math.round(p) + "%";
+    bar.setAttribute("aria-valuenow", Math.round(p));
+  }
+
+  function saveBlob(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+
+  function finish(msg, heading) {
+    title.textContent = heading;
+    stats.textContent = msg;
+    actions.classList.add("show");
+    btn.disabled = false;
+    closeBtn.focus();
+  }
+
+  // Descarga directa (por ejemplo si abres el index.html con file://)
+  function directDownload() {
+    bar.classList.remove("indeterminate");
+    setProgress(100);
+    var a = document.createElement("a");
+    a.href = encodeURI(FILE);
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    finish(t("dlBrowser"), t("dlStarted"));
+  }
+
+  async function startDownload() {
+    btn.disabled = true;
+    overlay.classList.add("open");
+    actions.classList.remove("show");
+    title.textContent = t("dlTitle");
+    stats.textContent = t("dlStarting");
+    bar.classList.remove("indeterminate");
+    setProgress(0);
+
+    if (location.protocol === "file:" || !window.fetch || !window.ReadableStream) {
+      directDownload();
+      return;
+    }
+
+    try {
+      var res = await fetch(encodeURI(FILE), { cache: "no-store" });
+      if (!res.ok) {
+        var httpErr = new Error("HTTP " + res.status);
+        httpErr.http = true;
+        throw httpErr;
+      }
+
+      var total = parseInt(res.headers.get("Content-Length"), 10) || 0;
+      var reader = res.body.getReader();
+      var chunks = [];
+      var received = 0;
+      var t0 = performance.now();
+
+      if (!total) bar.classList.add("indeterminate");
+
+      while (true) {
+        var r = await reader.read();
+        if (r.done) break;
+        chunks.push(r.value);
+        received += r.value.length;
+
+        var secs = (performance.now() - t0) / 1000;
+        var speed = secs > 0 ? received / secs : 0;
+        if (total) {
+          setProgress(received / total * 100);
+          stats.textContent = mb(received) + " " + t("of") + " " + mb(total) + " · " + mb(speed) + "/s";
+        } else {
+          stats.textContent = mb(received) + " " + t("downloaded") + " · " + mb(speed) + "/s";
+        }
+      }
+
+      bar.classList.remove("indeterminate");
+      setProgress(100);
+      saveBlob(new Blob(chunks, { type: "application/vnd.android.package-archive" }));
+      finish(t("dlOpenApk"), t("dlComplete"));
+    } catch (err) {
+      bar.classList.remove("indeterminate");
+      if (err && err.http) {
+        // El servidor respondió, pero el APK no está (404, etc.)
+        setProgress(0);
+        finish(t("dlError"), t("dlFailTitle"));
+      } else {
+        // Fallo de red o de lectura: se intenta la descarga directa del navegador
+        directDownload();
+      }
+    }
+  }
+
+  btn.addEventListener("click", startDownload);
+  closeBtn.addEventListener("click", function () { overlay.classList.remove("open"); btn.focus(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && actions.classList.contains("show")) closeBtn.click();
+  });
+})();
+</script>
+</body>
+</html>
